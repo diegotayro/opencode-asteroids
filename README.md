@@ -29,6 +29,7 @@ Luego visita `http://localhost:3000`.
 | `←` `→`   | Rotar nave |
 | `↑`       | Propulsar  |
 | `Espacio` | Disparar   |
+| `C`       | Cambiar skin de la nave |
 
 ## Puntuación
 
@@ -61,6 +62,26 @@ Asteroide especial de color ámbar con estela que recorre el campo:
 - Se destruye como cualquier asteroide (50 pts por la original, 100 por fragmento) y se parte en dos fragmentos igual de rápidos que heredan el tiempo restante.
 - No bloquea el cambio de nivel: si queda una estrella viva, el nivel avanza igual.
 
+## Skins
+
+Piel cosmética de la nave: cambia la silueta, el color de la línea y la llama del propulsor (los iconos de vida del HUD también se adaptan).
+
+| Tecla | Efecto |
+| ----- | ------ |
+| `C`   | Cambia a la siguiente skin y muestra su nombre brevemente en el HUD |
+
+| # | Skin | Línea | Forma |
+| - | ---- | ----- | ----- |
+| 0 | Clásica | blanca | Triángulo con muesca trasera (la original) |
+| 1 | Bisturí | cian | Nariz alargada y estrecha |
+| 2 | Cuña | ámbar | Alas anchas en flecha |
+| 3 | Cometa | rosa | Cuerpo corto con doble aleta trasera |
+| 4 | Trueno | violeta | Rombo partido |
+
+- Pura cosmética: todas comparten física, velocidad de disparo y radio de colisión.
+- Se puede cambiar en cualquier momento (durante la partida o en el game over).
+- La skin elegida se guarda en `localStorage` y persiste al recargar la página.
+
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
@@ -69,3 +90,4 @@ Asteroide especial de color ámbar con estela que recorre el campo:
 - Power-ups ⚡ Velocidad y 🛡 Escudo con indicador en el HUD
 - Escudo con burbuja visible que repele asteroides y estrellas fugazes
 - Estrella fugaz: asteroide rápido con estela que se desvanece con el tiempo
+- 5 skins de nave seleccionables con `C`, guardadas en el navegador

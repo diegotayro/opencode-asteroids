@@ -184,6 +184,39 @@ class ShootingStar extends Asteroid {
   }
 }
 
+// ── Skins de la nave ──────────────────────────────────────────────────────────
+// Pura cosmética: todas comparten física, radio de colisión y NOSE. Cada
+// silueta mantiene la nariz en x≈20 y la cola en x≈-12 para no romperlos.
+const SKINS = [
+  { name: 'Clásica', line: '#fff',    flame: 'rgba(255,130,0,0.85)',
+    verts: [[20, 0], [-12, -9], [-7, 0], [-12, 9]] },
+  { name: 'Bisturí', line: '#0ff',    flame: 'rgba(0,255,255,0.85)',
+    verts: [[21, 0], [-11, -5], [-5, 0], [-11, 5]] },
+  { name: 'Cuña', line: '#ffdf6b', flame: 'rgba(255,200,60,0.85)',
+    verts: [[20, 0], [-2, -5], [-13, -12], [-9, 0], [-13, 12], [-2, 5]] },
+  { name: 'Cometa', line: '#ff5f9e', flame: 'rgba(255,95,158,0.85)',
+    verts: [[20, 0], [6, -5], [-4, -4], [-13, -12], [-9, 0],
+            [-13, 12], [-4, 4], [6, 5]] },
+  { name: 'Trueno', line: '#9f7bff', flame: 'rgba(160,120,255,0.85)',
+    verts: [[20, 0], [0, -9], [-12, -4], [-6, 0], [-12, 4], [0, 9]] },
+];
+
+const SKIN_KEY = 'asteroids.skin';
+let skinIndex     = 0;
+let skinMsgTimer  = 0;   // aviso temporal al cambiar de skin con C
+
+try {
+  const saved = parseInt(localStorage.getItem(SKIN_KEY), 10);
+  if (Number.isInteger(saved) && saved >= 0 && saved < SKINS.length)
+    skinIndex = saved;
+} catch (e) { /* sin localStorage (file:// o modo privado): skin 0 */ }
+
+function cycleSkin() {
+  skinIndex = (skinIndex + 1) % SKINS.length;
+  skinMsgTimer = 1.5;
+  try { localStorage.setItem(SKIN_KEY, String(skinIndex)); } catch (e) {}
+}
+
 // ── Ship ──────────────────────────────────────────────────────────────────────
 class Ship {
   constructor() { this.reset(); }
@@ -280,19 +313,20 @@ class Ship {
     // Parpadeo durante invencibilidad de reaparición
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0) return;
 
+    const skin = SKINS[skinIndex];
+
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = skin.line;
     ctx.lineWidth   = 1.5;
     ctx.lineJoin    = 'round';
 
-    // Silueta clásica: triángulo con muesca trasera
+    // Silueta de la skin activa
     ctx.beginPath();
-    ctx.moveTo( 20,  0);   // nariz
-    ctx.lineTo(-12, -9);   // ala izquierda
-    ctx.lineTo( -7,  0);   // muesca trasera
-    ctx.lineTo(-12,  9);   // ala derecha
+    ctx.moveTo(skin.verts[0][0], skin.verts[0][1]);
+    for (let i = 1; i < skin.verts.length; i++)
+      ctx.lineTo(skin.verts[i][0], skin.verts[i][1]);
     ctx.closePath();
     ctx.stroke();
 
@@ -302,7 +336,7 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(6, 14), 0);
       ctx.lineTo(-8,  4);
-      ctx.strokeStyle = 'rgba(255, 130, 0, 0.85)';
+      ctx.strokeStyle = skin.flame;
       ctx.stroke();
     }
 
@@ -487,6 +521,10 @@ function killShip() {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 function update(dt) {
+  // Cambio de skin con C: disponible en cualquier estado
+  if (pressed('KeyC')) cycleSkin();
+  skinMsgTimer = Math.max(0, skinMsgTimer - dt);
+
   if (state === 'gameover') {
     if (pressed('Space')) initGame();
     particles.forEach(p => p.update(dt));
@@ -586,17 +624,18 @@ function update(dt) {
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
 function drawLifeIcon(x, y) {
+  const skin = SKINS[skinIndex];
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(-Math.PI / 2);
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth   = 1.2;
+  ctx.scale(0.45, 0.45);
+  ctx.strokeStyle = skin.line;
+  ctx.lineWidth   = 1.2 / 0.45;   // compensa el scale → 1.2 px efectivos
   ctx.lineJoin    = 'round';
   ctx.beginPath();
-  ctx.moveTo( 9,  0);
-  ctx.lineTo(-6, -5);
-  ctx.lineTo(-3,  0);
-  ctx.lineTo(-6,  5);
+  ctx.moveTo(skin.verts[0][0], skin.verts[0][1]);
+  for (let i = 1; i < skin.verts.length; i++)
+    ctx.lineTo(skin.verts[i][0], skin.verts[i][1]);
   ctx.closePath();
   ctx.stroke();
   ctx.restore();
@@ -629,6 +668,14 @@ function drawHUD() {
       ctx.fillStyle = '#0ff';
       ctx.fillText(`⚡ x2 ${ship.speedTimer.toFixed(1)}s`, 14, y);
     }
+  }
+
+  // Aviso de cambio de skin (tecla C)
+  if (skinMsgTimer > 0) {
+    ctx.textAlign   = 'center';
+    ctx.font        = '13px monospace';
+    ctx.fillStyle   = `rgba(255,255,255,${Math.min(1, skinMsgTimer / 0.5).toFixed(2)})`;
+    ctx.fillText(`SKIN  ${SKINS[skinIndex].name}`, W / 2, 44);
   }
 }
 
