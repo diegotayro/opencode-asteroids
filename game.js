@@ -185,8 +185,10 @@ class ShootingStar extends Asteroid {
 }
 
 // ── Skins de la nave ──────────────────────────────────────────────────────────
-// Pura cosmética: todas comparten física, radio de colisión y NOSE. Cada
-// silueta mantiene la nariz en x≈20 y la cola en x≈-12 para no romperlos.
+// Casi todas son pura cosmética. Dos campos opcionales (por defecto 1) rompen
+// eso: `scale` amplía la nave (dibujo, nariz y radio de colisión) y `scoreMul`
+// multiplica los puntos ganados. Cada silueta mantiene la nariz en x≈20 y la
+// cola en x≈-12: NOSE y el radio de colisión son 21/12 × scale.
 const SKINS = [
   { name: 'Clásica', line: '#fff',    flame: 'rgba(255,130,0,0.85)',
     verts: [[20, 0], [-12, -9], [-7, 0], [-12, 9]] },
@@ -199,6 +201,10 @@ const SKINS = [
             [-13, 12], [-4, 4], [6, 5]] },
   { name: 'Trueno', line: '#9f7bff', flame: 'rgba(160,120,255,0.85)',
     verts: [[20, 0], [0, -9], [-12, -4], [-6, 0], [-12, 4], [0, 9]] },
+  // Titán: 2× de tamaño (y de objetivo para los asteroides) pero doble de puntos
+  { name: 'Titán', line: '#a020f0', flame: 'rgba(160,32,240,0.85)',
+    scale: 2, scoreMul: 2,
+    verts: [[20, 0], [4, -7], [-12, -12], [-8, 0], [-12, 12], [4, 7]] },
 ];
 
 const SKIN_KEY = 'asteroids.skin';
@@ -217,9 +223,16 @@ function cycleSkin() {
   try { localStorage.setItem(SKIN_KEY, String(skinIndex)); } catch (e) {}
 }
 
+// Tamaño y multiplicador de la skin activa (1 = solo cosmética)
+const skinScale = () => SKINS[skinIndex].scale || 1;
+const scoreMul  = () => SKINS[skinIndex].scoreMul || 1;
+
 // ── Ship ──────────────────────────────────────────────────────────────────────
 class Ship {
   constructor() { this.reset(); }
+
+  // Radio de colisión: escala con la skin (Titán → 12 × 2 = 24 px)
+  get radius() { return 12 * skinScale(); }
 
   reset() {
     this.x      = W / 2;
@@ -227,7 +240,6 @@ class Ship {
     this.angle  = -Math.PI / 2;
     this.vx     = 0;
     this.vy     = 0;
-    this.radius = 12;
     this.thrusting     = false;
     this.invincible    = 3;
     this.shootCooldown = 0;
@@ -271,7 +283,7 @@ class Ship {
   tryShoot() {
     if (this.shootCooldown > 0 || this.dead) return [];
     this.shootCooldown = 0.2;
-    const NOSE = 21;
+    const NOSE = 21 * skinScale();   // la nariz escala con la skin
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
     // Power-up Triple: 3 balas en abanico estrecho (±4°) desde la nariz
@@ -309,7 +321,7 @@ class Ship {
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.beginPath();
-      ctx.arc(0, 0, 24, 0, Math.PI * 2);
+      ctx.arc(0, 0, 24 * skinScale(), 0, Math.PI * 2);
       if (this.shieldFlash > 0) {
         // Destello blanco al absorber un impacto
         ctx.strokeStyle = `rgba(255,255,255,${Math.min(1, 0.5 + this.shieldFlash * 2).toFixed(2)})`;
@@ -329,12 +341,14 @@ class Ship {
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0) return;
 
     const skin = SKINS[skinIndex];
+    const s = skinScale();
 
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
+    ctx.scale(s, s);
     ctx.strokeStyle = skin.line;
-    ctx.lineWidth   = 1.5;
+    ctx.lineWidth   = 1.5 / s;   // compensa el scale → 1.5 px efectivos
     ctx.lineJoin    = 'round';
 
     // Silueta de la skin activa
@@ -599,7 +613,7 @@ function update(dt) {
       if (!a.dead && !b.dead && dist(b, a) < a.radius) {
         b.dead = true;
         a.dead = true;
-        score += POINTS[a.size];
+        score += POINTS[a.size] * scoreMul();   // Titán: doble de puntos
         explode(a.x, a.y, a.size * 5);
         if (Math.random() < DROP_CHANCE) {
           const kind = POWERUP_KINDS[Math.floor(Math.random() * POWERUP_KINDS.length)];
@@ -654,12 +668,13 @@ function update(dt) {
 // ── Draw ──────────────────────────────────────────────────────────────────────
 function drawLifeIcon(x, y) {
   const skin = SKINS[skinIndex];
+  const s = 0.45 * skinScale();   // Titán: icono proporcional a la nave
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(-Math.PI / 2);
-  ctx.scale(0.45, 0.45);
+  ctx.scale(s, s);
   ctx.strokeStyle = skin.line;
-  ctx.lineWidth   = 1.2 / 0.45;   // compensa el scale → 1.2 px efectivos
+  ctx.lineWidth   = 1.2 / s;   // compensa el scale → 1.2 px efectivos
   ctx.lineJoin    = 'round';
   ctx.beginPath();
   ctx.moveTo(skin.verts[0][0], skin.verts[0][1]);
@@ -675,13 +690,22 @@ function drawHUD() {
   ctx.font = '15px monospace';
 
   ctx.textAlign = 'left';
-  ctx.fillText(`SCORE  ${score}`, 14, 26);
+  const scoreText = `SCORE  ${score}`;
+  ctx.fillText(scoreText, 14, 26);
+
+  // Multiplicador de la skin activa (Titán: ×2)
+  if (scoreMul() > 1) {
+    ctx.fillStyle = SKINS[skinIndex].line;
+    ctx.fillText(` ×${scoreMul()}`, 14 + ctx.measureText(scoreText).width, 26);
+    ctx.fillStyle = '#fff';
+  }
 
   ctx.textAlign = 'center';
   ctx.fillText(`NIVEL ${level}`, W / 2, 26);
 
+  const lifeGap = 22 * skinScale();   // Titán: iconos más grandes, más separación
   for (let i = 0; i < lives; i++)
-    drawLifeIcon(W - 16 - i * 22, 18);
+    drawLifeIcon(W - 16 - i * lifeGap, 18);
 
   // Power-ups activos (🛡 Escudo, ⚡ Velocidad y ∴ Triple)
   if (state === 'playing') {
@@ -706,10 +730,12 @@ function drawHUD() {
 
   // Aviso de cambio de skin (tecla C)
   if (skinMsgTimer > 0) {
+    const skin = SKINS[skinIndex];
+    const bonus = skin.scoreMul > 1 ? `  ×${skin.scoreMul} PTS` : '';
     ctx.textAlign   = 'center';
     ctx.font        = '13px monospace';
     ctx.fillStyle   = `rgba(255,255,255,${Math.min(1, skinMsgTimer / 0.5).toFixed(2)})`;
-    ctx.fillText(`SKIN  ${SKINS[skinIndex].name}`, W / 2, 44);
+    ctx.fillText(`SKIN  ${skin.name}${bonus}`, W / 2, 44);
   }
 }
 

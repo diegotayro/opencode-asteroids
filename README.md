@@ -39,6 +39,8 @@ Luego visita `http://localhost:3000`.
 | Mediano   | 50     |
 | Pequeño   | 100    |
 
+Con la skin **Titán** activa, cada valor se multiplica por 2 (40 / 100 / 200).
+
 ## Power-ups
 
 | Power-up     | Efecto                                                     |
@@ -66,7 +68,7 @@ Asteroide especial de color ámbar con estela que recorre el campo:
 
 ## Skins
 
-Piel cosmética de la nave: cambia la silueta, el color de la línea y la llama del propulsor (los iconos de vida del HUD también se adaptan).
+Piel de la nave: cambia la silueta, el color de la línea y la llama del propulsor (los iconos de vida del HUD también se adaptan). Casi todas son pura cosmética; **Titán** es la excepción (ver abajo).
 
 | Tecla | Efecto |
 | ----- | ------ |
@@ -79,8 +81,10 @@ Piel cosmética de la nave: cambia la silueta, el color de la línea y la llama 
 | 2 | Cuña | ámbar | Alas anchas en flecha |
 | 3 | Cometa | rosa | Cuerpo corto con doble aleta trasera |
 | 4 | Trueno | violeta | Rombo partido |
+| 5 | Titán | morada | Delta ancho y robusto |
 
-- Pura cosmética: todas comparten física, velocidad de disparo y radio de colisión.
+- La mayoría es pura cosmética: comparten física, velocidad de disparo y radio de colisión.
+- **Titán** mide el **doble** que la nave original (dibujo, nariz y radio de colisión ×2 → 24 px; la burbuja del escudo y los iconos de vida también se amplían), pero a cambio otorga el **doble de puntos** por cada asteroide destruido. El HUD muestra `×2` junto a la puntuación y el aviso de skin muestra `×2 PTS`. El mayor tamaño implica un objetivo más grande para los asteroides.
 - Se puede cambiar en cualquier momento (durante la partida o en el game over).
 - La skin elegida se guarda en `localStorage` y persiste al recargar la página.
 
@@ -92,4 +96,4 @@ Piel cosmética de la nave: cambia la silueta, el color de la línea y la llama 
 - Power-ups ⚡ Velocidad, 🛡 Escudo y ∴ Triple con indicador en el HUD
 - Escudo con burbuja visible que repele asteroides y estrellas fugaces
 - Estrella fugaz: asteroide rápido con estela que se desvanece con el tiempo
-- 5 skins de nave seleccionables con `C`, guardadas en el navegador
+- 6 skins de nave seleccionables con `C`, guardadas en el navegador (Titán: 2× de tamaño y puntos dobles)
