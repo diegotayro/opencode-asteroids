@@ -49,9 +49,20 @@ Luego visita `http://localhost:3000`.
 - Dura 5 s; recoger otro reinicia el contador. Si nadie lo toma, desaparece a los 10 s.
 - El tiempo restante se muestra en el HUD mientras está activo.
 
+## Estrella fugaz
+
+Asteroide especial de color ámbar con estela que recorre el campo:
+
+- Aparece cada 6–12 s en un punto seguro para la nave (un poco más frecuente en niveles altos).
+- Se mueve a ~300 px/s, mucho más rápido que cualquier asteroide normal.
+- Desaparece a los 6 s: se desvanece y parpadea durante el último segundo.
+- Se destruye como cualquier asteroide (50 pts por la original, 100 por fragmento) y se parte en dos fragmentos igual de rápidos que heredan el tiempo restante.
+- No bloquea el cambio de nivel: si queda una estrella viva, el nivel avanza igual.
+
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
 - Power-up ⚡ Velocidad con indicador en el HUD
+- Estrella fugaz: asteroide rápido con estela que se desvanece con el tiempo
