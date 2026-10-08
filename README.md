@@ -40,14 +40,16 @@ Luego visita `http://localhost:3000`.
 
 ## Power-ups
 
-| Power-up    | Efecto                                            |
-| ----------- | ------------------------------------------------- |
-| ⚡ Velocidad | Moverse el doble de velocidad durante 5 segundos |
+| Power-up     | Efecto                                                     |
+| ------------ | ---------------------------------------------------------- |
+| ⚡ Velocidad  | Moverse el doble de velocidad durante 5 segundos           |
+| ∴ Triple     | Disparar 3 balas en abanico estrecho (±4°) durante 5 segundos |
 
-- Caen con ~20 % de probabilidad al destruir un asteroide (incluidos los fragmentos).
-- Solo aumenta el empuje: aceleración y velocidad máxima ×2 (el giro no cambia).
-- Dura 5 s; recoger otro reinicia el contador. Si nadie lo toma, desaparece a los 10 s.
-- El tiempo restante se muestra en el HUD mientras está activo.
+- Caen con ~20 % de probabilidad total al destruir un asteroide (incluidos los fragmentos); el tipo es aleatorio 50/50.
+- ⚡ solo aumenta el empuje: aceleración y velocidad máxima ×2 (el giro no cambia).
+- ∴ añade 2 balas extra por disparo con ±4° de dispersión desde la nariz (el cooldown no cambia).
+- Dura 5 s; recoger otro del mismo tipo reinicia el contador. Si nadie lo toma, desaparece a los 10 s.
+- El tiempo restante de cada power-up activo se muestra en el HUD.
 
 ## Estrella fugaz
 
@@ -64,5 +66,5 @@ Asteroide especial de color ámbar con estela que recorre el campo:
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
-- Power-up ⚡ Velocidad con indicador en el HUD
+- Power-ups ⚡ Velocidad y ∴ Triple con indicador en el HUD
 - Estrella fugaz: asteroide rápido con estela que se desvanece con el tiempo
