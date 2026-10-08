@@ -9,9 +9,20 @@ on:
 
 jobs:
   opencode:
+    # Solo menciones explícitas de usuarios humanos:
+    # - Plantilla oficial actual (startsWith o ' /oc' con espacio): evita que
+    #   enlaces al repo tipo ".../opencode-asteroids/..." activen el trigger.
+    # - Se excluye al bot: si no, el propio comentario del bot (su footer lleva
+    #   la URL del repo) re-dispara este workflow en bucle y assertPermissions()
+    #   falla porque la API de colaboradores de GitHub devuelve permission: none
+    #   para bots de App (bug opencode#17224).
     if: |
-      contains(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, '/opencode')
+      github.event.comment.user.login != 'opencode-agent[bot]' && (
+      startsWith(github.event.comment.body, '/oc') ||
+      contains(github.event.comment.body, ' /oc') ||
+      startsWith(github.event.comment.body, '/opencode') ||
+      contains(github.event.comment.body, ' /opencode')
+      )
     runs-on: ubuntu-latest
     permissions:
       # Necesario para el intercambio OIDC con la OpenCode App
