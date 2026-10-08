@@ -1,0 +1,80 @@
+name: issue-triage
+
+# Triaje automático: al abrir un issue, OpenCode añade una sección de
+# revisión arriba (sin tocar el texto original) y aplica el label de categoría.
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      # Necesario para el intercambio OIDC con la OpenCode App
+      id-token: write
+      # Necesario para que actions/checkout haga fetch del repo
+      contents: read
+      # Necesario para editar el body del issue y aplicar labels
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Run OpenCode
+        uses: anomalyco/opencode/github@latest
+        with:
+          # opencode/big-pickle es un modelo gratuito de OpenCode:
+          # no requiere API key ni secrets adicionales
+          model: opencode/big-pickle
+          prompt: |
+            Estás haciendo el triaje automático de un issue recién abierto en este
+            repo (un clon de Asteroids en HTML5 canvas: solo index.html, game.js,
+            README.md y favicon.svg; sin build ni dependencias).
+
+            Tu trabajo, en este orden exacto:
+
+            1. LEE el body original del issue tal como llegó en el evento. Cópialo
+               literalmente: no lo reescribas, no lo resumas, no corrijas ortografía,
+               no toques nada de lo que escribió la persona.
+
+            2. EDITA el body del issue dejando este formato exacto:
+
+               <!-- opencode-triage -->
+               ### 🤖 Revisión automática
+
+               - **Categoría:** bug | enhancement | question | documentation (elige UNO)
+               - **Resumen:** 1-2 líneas con lo que pide o reporta la persona
+               - **Áreas relacionadas:** archivos/secciones del repo que toca
+                 (p. ej. `game.js` sección Power-ups, `index.html`, skins, escudo…)
+               - **Info útil para revisar:** qué falta para poder evaluarlo
+                 (p. ej. navegador/SO y pasos de reproducción si es bug,
+                 o comportamiento esperado si es enhancement)
+
+               ---
+               <aquí va el body original EXACTO, sin modificar>
+
+               Reglas del formato:
+               - La sección de revisión va ARRIBA, separada del original por una
+                 línea `---` sola. El texto original queda debajo intacto.
+               - El comentario HTML `<!-- opencode-triage -->` es la primera línea.
+                 Si el body YA lo contiene, NO hagas nada (ya fue triado) y termina.
+               - No añadas nada debajo del texto original.
+
+            3. APLICA labels: exactamente UNO de estos cuatro, según el contenido:
+               - `bug` — algo no funciona
+               - `enhancement` — mejora o feature nueva
+               - `question` — duda o consulta
+               - `documentation` — docs, README, comentarios de código
+               Si el label no existe en el repo, créalo antes de aplicarlo
+               (bug: #d73a4a "Algo no funciona", enhancement: #a2eeef "Mejora o feature",
+               question: #d876e3 "Duda o consulta", documentation: #0075ca "Documentación").
+               No apliques ningún otro label ni quites labels puestos por la persona.
+
+            4. Restricciones duras:
+               - NO borres ni reescribas NINGUNA parte del texto original del autor.
+               - NO publiques comentarios en el issue; todo va en el body y los labels.
+               - NO toques ningún otro issue ni abras issues nuevos.
+               - NO toques archivos del repo (no hay commits que hacer).
