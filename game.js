@@ -234,6 +234,7 @@ class Ship {
     this.speedTimer    = 0;
     this.shieldTimer   = 0;
     this.shieldFlash   = 0;   // destello de la burbuja al recibir un impacto
+    this.tripleTimer   = 0;
     this.dead          = false;
   }
 
@@ -244,6 +245,7 @@ class Ship {
     if (this.speedTimer    > 0) this.speedTimer    -= dt;
     if (this.shieldTimer   > 0) this.shieldTimer   -= dt;
     if (this.shieldFlash   > 0) this.shieldFlash   -= dt;
+    if (this.tripleTimer   > 0) this.tripleTimer   -= dt;
 
     const ROT   = 3.5;   // rad/s
     const THRUST = 260;  // px/s²
@@ -272,6 +274,14 @@ class Ship {
     const NOSE = 21;
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
+    // Power-up Triple: 3 balas en abanico estrecho (±4°) desde la nariz
+    if (this.tripleTimer > 0) {
+      return [
+        new Bullet(ox, oy, this.angle - TRIPLE_SPREAD),
+        new Bullet(ox, oy, this.angle),
+        new Bullet(ox, oy, this.angle + TRIPLE_SPREAD),
+      ];
+    }
     return [new Bullet(ox, oy, this.angle)];
   }
 
@@ -284,6 +294,11 @@ class Ship {
   shieldUp() {
     this.shieldTimer = SHIELD_DUR;
     this.shieldFlash = 0;
+  }
+
+  // Power-up Triple: 5 s de disparo en abanico (reinicia si ya estaba activo)
+  tripleShot() {
+    this.tripleTimer = TRIPLE_DUR;
   }
 
   draw() {
@@ -377,15 +392,18 @@ class Particle {
 }
 
 // ── Power-ups ─────────────────────────────────────────────────────────────────
-const SPEED_DUR   = 5;     // segundos de doble empuje (⚡ Velocidad)
-const SHIELD_DUR  = 5;     // segundos de inmunidad a impactos (🛡 Escudo)
-const DROP_CHANCE = 0.2;   // probabilidad de drop al destruir un asteroide
+const SPEED_DUR     = 5;                 // segundos de doble empuje (⚡ Velocidad)
+const SHIELD_DUR    = 5;                 // segundos de inmunidad a impactos (🛡 Escudo)
+const TRIPLE_DUR    = 5;                 // segundos de disparo en abanico (∴ Triple)
+const TRIPLE_SPREAD = 4 * Math.PI / 180; // ±4° de dispersión del triple shot
+const DROP_CHANCE   = 0.2;               // probabilidad de drop al destruir un asteroide
+const POWERUP_KINDS = ['speed', 'shield', 'triple'];  // tipo al azar (uniforme)
 
 class PowerUp {
   constructor(x, y, kind = 'speed') {
     this.x = x;
     this.y = y;
-    this.kind = kind;      // 'speed' (⚡) | 'shield' (🛡)
+    this.kind = kind;      // 'speed' (⚡) | 'shield' (🛡) | 'triple' (∴)
     this.radius = 14;
     this.ttl    = 10;      // si nadie lo toma, desaparece
     this.phase  = rand(0, Math.PI * 2);
@@ -402,20 +420,24 @@ class PowerUp {
     // Parpadeo en los últimos 2 s
     if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
 
+    const isTriple = this.kind === 'triple';
+
     const s = 1 + Math.sin(this.phase) * 0.1;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.scale(s, s);
 
+    // Círculo contenedor: cian = Velocidad, magenta = Escudo / Triple
+    ctx.strokeStyle = this.kind === 'speed' ? '#0ff' : (isTriple ? '#f0f' : '#f6f');
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
     if (this.kind === 'shield') {
-      // Círculo magenta
+      // Glifo de escudo
       ctx.strokeStyle = '#f6f';
       ctx.lineWidth   = 1.5;
-      ctx.beginPath();
-      ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Glifo de escudo
       ctx.beginPath();
       ctx.moveTo(-7, -8);
       ctx.lineTo( 7, -8);
@@ -424,14 +446,20 @@ class PowerUp {
       ctx.lineTo(-7,  1);
       ctx.closePath();
       ctx.stroke();
-    } else {
-      // Círculo cian
-      ctx.strokeStyle = '#0ff';
+    } else if (isTriple) {
+      // Abanico de 3 líneas divergentes desde la nariz
+      ctx.strokeStyle = '#fff';
       ctx.lineWidth   = 1.5;
+      ctx.lineCap     = 'round';
       ctx.beginPath();
-      ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+      ctx.moveTo(0, 9);
+      ctx.lineTo(-6, -7);
+      ctx.moveTo(0, 9);
+      ctx.lineTo(0, -8);
+      ctx.moveTo(0, 9);
+      ctx.lineTo(6, -7);
       ctx.stroke();
-
+    } else {
       // Rayo amarillo
       ctx.fillStyle = '#ff0';
       ctx.beginPath();
@@ -574,7 +602,7 @@ function update(dt) {
         score += POINTS[a.size];
         explode(a.x, a.y, a.size * 5);
         if (Math.random() < DROP_CHANCE) {
-          const kind = Math.random() < 0.5 ? 'shield' : 'speed';
+          const kind = POWERUP_KINDS[Math.floor(Math.random() * POWERUP_KINDS.length)];
           powerups.push(new PowerUp(a.x, a.y, kind));
         }
         newAsteroids.push(...a.split());
@@ -612,6 +640,7 @@ function update(dt) {
     if (!p.dead && dist(ship, p) < ship.radius + p.radius) {
       p.dead = true;
       if (p.kind === 'shield') ship.shieldUp();
+      else if (p.kind === 'triple') ship.tripleShot();
       else ship.speedUp();
     }
   }
@@ -654,7 +683,7 @@ function drawHUD() {
   for (let i = 0; i < lives; i++)
     drawLifeIcon(W - 16 - i * 22, 18);
 
-  // Power-ups activos (🛡 Escudo y ⚡ Velocidad)
+  // Power-ups activos (🛡 Escudo, ⚡ Velocidad y ∴ Triple)
   if (state === 'playing') {
     ctx.textAlign = 'left';
     ctx.font = '13px monospace';
@@ -667,6 +696,11 @@ function drawHUD() {
     if (ship.speedTimer > 0) {
       ctx.fillStyle = '#0ff';
       ctx.fillText(`⚡ x2 ${ship.speedTimer.toFixed(1)}s`, 14, y);
+      y += 18;
+    }
+    if (ship.tripleTimer > 0) {
+      ctx.fillStyle = '#f0f';
+      ctx.fillText(`∴ x3 ${ship.tripleTimer.toFixed(1)}s`, 14, y);
     }
   }
 

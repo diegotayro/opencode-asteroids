@@ -41,15 +41,17 @@ Luego visita `http://localhost:3000`.
 
 ## Power-ups
 
-| Power-up     | Efecto                                            |
-| ------------ | ------------------------------------------------- |
-| ⚡ Velocidad  | Moverse el doble de velocidad durante 5 segundos |
-| 🛡 Escudo     | Inmune a los impactos durante 5 segundos         |
+| Power-up     | Efecto                                                     |
+| ------------ | ---------------------------------------------------------- |
+| ⚡ Velocidad  | Moverse el doble de velocidad durante 5 segundos           |
+| 🛡 Escudo     | Inmune a los impactos durante 5 segundos                   |
+| ∴ Triple      | Disparar 3 balas en abanico estrecho (±4°) durante 5 segundos |
 
-- Caen con ~20 % de probabilidad al destruir un asteroide (incluidos los fragmentos); el tipo es aleatorio (50/50 entre ambos).
+- Caen con ~20 % de probabilidad total al destruir un asteroide (incluidos los fragmentos); el tipo es aleatorio por igual entre los tres.
 - ⚡ solo aumenta el empuje: aceleración y velocidad máxima ×2 (el giro no cambia).
 - 🛡 anula el daño de asteroides y estrellas fugaces: el impacto repele al asteroide (no lo destruye ni suma puntos) y la burbuja brilla al absorberlo.
-- Ambos duran 5 s; recoger otro reinicia el contador. Si nadie lo toma, desaparece a los 10 s.
+- ∴ añade 2 balas extra por disparo con ±4° de dispersión desde la nariz (el cooldown no cambia).
+- Todos duran 5 s; recoger otro del mismo tipo reinicia el contador. Si nadie lo toma, desaparece a los 10 s.
 - El tiempo restante de cada power-up activo se muestra en el HUD.
 
 ## Estrella fugaz
@@ -87,7 +89,7 @@ Piel cosmética de la nave: cambia la silueta, el color de la línea y la llama 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
-- Power-ups ⚡ Velocidad y 🛡 Escudo con indicador en el HUD
-- Escudo con burbuja visible que repele asteroides y estrellas fugazes
+- Power-ups ⚡ Velocidad, 🛡 Escudo y ∴ Triple con indicador en el HUD
+- Escudo con burbuja visible que repele asteroides y estrellas fugaces
 - Estrella fugaz: asteroide rápido con estela que se desvanece con el tiempo
 - 5 skins de nave seleccionables con `C`, guardadas en el navegador
